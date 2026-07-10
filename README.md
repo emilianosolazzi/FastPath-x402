@@ -2,7 +2,7 @@
 
 Minimal public Node.js examples for paying FastPath x402 endpoints and reading Bitcoin intelligence data.
 
-Live API: [api.nativebtc.org/x402](https://api.nativebtc.org/x402)
+Live API: [api.nativebtc.org/#x402](https://api.nativebtc.org/#x402)
 
 ## What this repo contains
 
