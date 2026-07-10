@@ -1,0 +1,21 @@
+{
+  "name": "fastpath-x402-demo",
+  "version": "0.1.0",
+  "description": "Minimal public FastPath x402 integration examples for Bitcoin optimizer data.",
+  "type": "module",
+  "private": false,
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test:x402": "node test-x402-optimizer.js",
+    "quote": "node test-x402-optimizer.js"
+  },
+  "dependencies": {
+    "@x402/evm": "^2.17.0",
+    "@x402/fetch": "^2.17.0",
+    "dotenv": "^17.2.3",
+    "viem": "^2.38.0"
+  }
+}
