@@ -2,15 +2,13 @@
 
 Minimal public Node.js examples for paying FastPath x402 endpoints and reading Bitcoin optimizer data.
 
-This repo is intentionally small. It should contain only:
+This repo is intentionally small. It contains only:
 
 - `x402-optimizer-middleware.js`
 - `test-x402-optimizer.js`
 - `package.json`
 - `README.md`
 - `.gitignore`
-
-Do not publish the private FastPath server repo, UI files, keys, logs, binaries, or `node_modules`.
 
 ## What This Demonstrates
 
@@ -101,16 +99,4 @@ git pull origin main --rebase
 git push -u origin main
 ```
 
-If the remote already has files, start from the remote first, then add these demo files:
 
-```powershell
-git init
-git remote add origin https://github.com/emilianosolazzi/FastPath-x402.git
-git fetch origin main
-git checkout -B main origin/main
-git add .gitignore package.json README.md test-x402-optimizer.js x402-optimizer-middleware.js
-git commit -m "FastPath x402 integration examples"
-git push -u origin main
-```
-
-Never run these commands from the private FastPath project directory.
