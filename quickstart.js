@@ -36,21 +36,25 @@ const pay = wrapFetchWithPaymentFromConfig(fetch, {
   schemes: [{ network: "eip155:*", client: new ExactEvmScheme(account) }],
 });
 
-// Use a txid from env, or grab a fresh unconfirmed one automatically
+// Use a txid from env, or grab a guaranteed unconfirmed one automatically.
+// /api/mempool/txids returns the full current mempool sorted by fee rate —
+// every txid in this list is unconfirmed by definition.
 let txid = process.env.TXID;
 
 if (!txid) {
-  console.log("Fetching a live unconfirmed transaction from mempool.space...");
-  const recent = await fetch("https://mempool.space/api/mempool/recent")
+  console.log("Fetching a live unconfirmed transaction from mempool...");
+  const txids = await fetch("https://mempool.space/api/mempool/txids")
     .then((r) => r.json())
     .catch(() => null);
 
-  if (!recent || !recent[0]?.txid) {
+  if (!txids || !txids[0]) {
     console.error("Could not fetch a live txid. Set TXID manually and retry.");
     process.exit(1);
   }
 
-  txid = recent[0].txid;
+  // Take the first txid — highest fee rate, most likely to still be
+  // unconfirmed by the time the insight call completes.
+  txid = txids[0];
 }
 
 console.log(`\nAnalyzing ${txid}`);
