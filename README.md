@@ -1,23 +1,16 @@
 # FastPath x402 Demo
 
-Minimal public Node.js examples for paying FastPath x402 endpoints and reading Bitcoin optimizer data.
+Minimal public Node.js examples for paying FastPath x402 endpoints and reading Bitcoin intelligence data.
 
-This repo is intentionally small. It contains only:
+Live API: [api.nativebtc.org/x402](https://api.nativebtc.org/x402)
 
-- `x402-optimizer-middleware.js`
-- `test-x402-optimizer.js`
+## What this repo contains
+
+- `quickstart.js` — one file, one command, live Bitcoin tx analysis paid with USDC
+- `x402-optimizer-middleware.js` — reusable x402 client factory
+- `test-x402-optimizer.js` — full demo: quote check, fee ladder, tx insight
 - `package.json`
-- `README.md`
 - `.gitignore`
-
-## What This Demonstrates
-
-- Reading an x402 quote before a bot spends.
-- Creating an x402-paid FastPath client.
-- Calling `fastpath_feeLadder` through `POST /v1/rpc`.
-- Optionally calling `/v1/bitcoin/insight` for a Bitcoin txid.
-
-Customer access is x402 only. No customer API key is used.
 
 ## Install
 
@@ -25,56 +18,68 @@ Customer access is x402 only. No customer API key is used.
 npm install
 ```
 
-## Free Quote Test
+## Quickstart — 60 seconds
 
-This does not require a wallet and does not spend.
+The fastest way to see x402 + Bitcoin working together. Grabs a live unconfirmed transaction automatically, pays $0.01 USDC on Base, returns a decision.
+
+```powershell
+$env:EVM_PRIVATE_KEY="0xYOUR_PRIVATE_KEY"
+node quickstart.js
+```
+
+```bash
+EVM_PRIVATE_KEY=0xYOUR_PRIVATE_KEY node quickstart.js
+```
+
+Expected output:
+
+```
+Analyzing 81c97a6c...38325
+Verdict:  healthy_for_target
+Summary:  Effective fee rate 2 sat/vB is at or above the current 1 sat/vB target.
+Bump:     not needed
+Cost:     $0.01 USDC on Base
+```
+
+Use a low-balance bot wallet. Do not use your main wallet.
+
+## Free quote — no wallet needed
+
+See the payment challenge before spending anything.
 
 ```bash
 npm run quote
 ```
 
-It calls:
+Calls `GET /v1/block-height` and prints the `Payment-Required` header decoded — price, supported networks, USDC token address, and pay-to address.
 
-```text
-GET https://api.nativebtc.org/v1/block-height
-```
+## Full demo
 
-The expected result is `HTTP 402 Payment Required` with `Payment-Required` options for USDC on supported x402 networks.
-
-## Paid Test
-
-Use a low-balance bot wallet. Do not use your main wallet.
+Fee ladder across all block targets, plus optional tx insight.
 
 PowerShell:
 
 ```powershell
 $env:EVM_PRIVATE_KEY="0xYOUR_PRIVATE_KEY"
-$env:X402_NETWORK="eip155:*"
 npm run test:x402
 ```
 
 Bash:
 
 ```bash
-EVM_PRIVATE_KEY=0xYOUR_PRIVATE_KEY X402_NETWORK=eip155:* npm run test:x402
+EVM_PRIVATE_KEY=0xYOUR_PRIVATE_KEY npm run test:x402
 ```
 
-The paid test calls:
-
-```js
-fastPath.feeLadder(6)
-```
-
-To test tx insight:
+To also run tx insight, set a txid. Get one from [mempool.space](https://mempool.space) or let quickstart.js grab one automatically:
 
 ```powershell
 $env:TXID="PASTE_TXID"
 npm run test:x402
 ```
 
-## Supported Payment Networks
+The full demo calls `fastpath_feeLadder` then optionally `fastpath_bitcoinInsight`.
 
-FastPath currently advertises USDC payment options for:
+## Supported payment networks
 
 | Network | CAIP-2 |
 | --- | --- |
@@ -83,4 +88,26 @@ FastPath currently advertises USDC payment options for:
 | Arbitrum | `eip155:42161` |
 | World | `eip155:480` |
 
+`eip155:*` in the client config means the library picks whichever network the wallet has funds on.
 
+## Pricing
+
+| Route | USDC per request |
+| --- | --- |
+| `/v1/block-height`, `/v1/rpc`, `/v1/mempool/*` | $0.001 |
+| `/v1/utxos/:address` | $0.002 |
+| `/v1/mempool/stream-ticket` | $0.005 |
+| `/v1/bitcoin/insight`, `/v1/template/*` | $0.01 |
+| `/v1/template/batch-check` | $0.05 |
+
+Full pricing and capabilities: `curl https://api.nativebtc.org/v1/template/capabilities`
+
+## How it works
+
+1. Bot calls a paid route
+2. Server returns `HTTP 402 Payment Required` with a `Payment-Required` header
+3. `@x402/fetch` reads the header, pays USDC on-chain automatically
+4. Bot retries the request with a payment proof header
+5. Server verifies via Coinbase CDP facilitator and returns Bitcoin data
+
+No API keys. No accounts. No human involvement after the wallet is funded.
