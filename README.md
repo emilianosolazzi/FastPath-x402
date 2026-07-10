@@ -83,20 +83,4 @@ FastPath currently advertises USDC payment options for:
 | Arbitrum | `eip155:42161` |
 | World | `eip155:480` |
 
-## Publish From A Clean Folder
-
-From `C:\FastPath-x402-demo`:
-
-```powershell
-git init
-echo ".env" > .gitignore
-echo "node_modules/" >> .gitignore
-git add .
-git commit -m "FastPath x402 integration examples"
-git branch -M main
-git remote add origin https://github.com/emilianosolazzi/FastPath-x402.git
-git pull origin main --rebase
-git push -u origin main
-```
-
 
