@@ -1,8 +1,9 @@
 /**
  * FastPath x402 Quickstart
  *
- * Grabs a live unconfirmed Bitcoin transaction automatically,
- * pays $0.01 USDC via x402, and returns a plain-English decision.
+ * Grabs a live unconfirmed Bitcoin transaction, verifies it is genuinely
+ * unconfirmed using FREE calls first, then pays $0.01 USDC via x402
+ * exactly once for the analysis.
  *
  * Run:
  *   EVM_PRIVATE_KEY=0x... node quickstart.js        (bash)
@@ -36,27 +37,79 @@ const pay = wrapFetchWithPaymentFromConfig(fetch, {
   schemes: [{ network: "eip155:*", client: new ExactEvmScheme(account) }],
 });
 
-// Use a txid from env, or grab a guaranteed unconfirmed one automatically.
-// /api/mempool/txids returns the full current mempool sorted by fee rate —
-// every txid in this list is unconfirmed by definition.
-let txid = process.env.TXID;
+/**
+ * FREE check — is this txid still unconfirmed right now?
+ * Uses mempool.space's public API. Costs nothing.
+ * Returns true only if the tx exists AND is not yet confirmed.
+ */
+async function isUnconfirmed(txid) {
+  try {
+    const res = await fetch(`https://mempool.space/api/tx/${txid}/status`);
+    if (!res.ok) return false;
+    const status = await res.json();
+    return status.confirmed === false;
+  } catch {
+    return false;
+  }
+}
 
-if (!txid) {
-  console.log("Fetching a live unconfirmed transaction from mempool...");
+/**
+ * Find a genuinely unconfirmed txid. All calls in here are FREE.
+ * Picks random candidates from the mempool list and verifies each
+ * one is still unconfirmed before returning it. Never returns a
+ * txid that hasn't passed live verification.
+ */
+async function findUnconfirmedTxid() {
+  console.log("Fetching live mempool txid list (free)...");
+
   const txids = await fetch("https://mempool.space/api/mempool/txids")
     .then((r) => r.json())
     .catch(() => null);
 
-  if (!txids || !txids[0]) {
-    console.error("Could not fetch a live txid. Set TXID manually and retry.");
-    process.exit(1);
+  if (!txids || txids.length === 0) {
+    return null;
   }
 
-  // Take the first txid — highest fee rate, most likely to still be
-  // unconfirmed by the time the insight call completes.
-  txid = txids[0];
+  // Try up to 5 random candidates. Random avoids repeatedly hitting
+  // the same stuck transaction at a fixed list position.
+  for (let attempt = 1; attempt <= 5; attempt++) {
+    const candidate = txids[Math.floor(Math.random() * txids.length)];
+    process.stdout.write(`Verifying candidate ${attempt} is unconfirmed (free)... `);
+
+    if (await isUnconfirmed(candidate)) {
+      console.log("confirmed unconfirmed ✓");
+      return candidate;
+    }
+    console.log("already confirmed, trying another");
+  }
+
+  return null;
 }
 
+// ── Resolve the txid ────────────────────────────────────────────
+let txid = process.env.TXID;
+
+if (txid) {
+  // Even a user-supplied txid gets the free check first —
+  // no payment for a transaction that already confirmed.
+  console.log("Verifying supplied TXID is unconfirmed (free)...");
+  if (!(await isUnconfirmed(txid))) {
+    console.error(`\nTXID ${txid} is already confirmed or unknown.`);
+    console.error("No payment was made. Unset TXID to auto-select a live one:");
+    console.error("  PowerShell: Remove-Item Env:TXID");
+    console.error("  Bash:       unset TXID");
+    process.exit(1);
+  }
+} else {
+  txid = await findUnconfirmedTxid();
+  if (!txid) {
+    console.error("\nCould not find a verified unconfirmed txid after 5 attempts.");
+    console.error("No payment was made. Try again in a moment.");
+    process.exit(1);
+  }
+}
+
+// ── Pay exactly once, for a verified-unconfirmed transaction ────
 console.log(`\nAnalyzing ${txid}`);
 console.log("Paying $0.01 USDC via x402...\n");
 
