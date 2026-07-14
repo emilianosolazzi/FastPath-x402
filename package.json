@@ -1,21 +1,49 @@
 {
   "name": "fastpath-x402-demo",
-  "version": "0.1.0",
-  "description": "Minimal public FastPath x402 integration examples for Bitcoin optimizer data.",
+  "version": "0.2.0",
+  "description": "FastPath x402 integration examples — Bitcoin fee intelligence, mempool monitoring, RBF bump plans, and Core v31 optimizer templates. Pay per request with USDC. No API keys.",
   "type": "module",
   "private": false,
   "license": "MIT",
+  "homepage": "https://api.nativebtc.org/x402",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/emilianosolazzi/FastPath-x402.git"
+  },
+  "keywords": [
+    "bitcoin",
+    "x402",
+    "mempool",
+    "block-template",
+    "stratum-v2",
+    "job-declaration",
+    "rbf",
+    "fee-estimation",
+    "usdc",
+    "base"
+  ],
   "engines": {
     "node": ">=20"
   },
   "scripts": {
-    "test:x402": "node test-x402-optimizer.js",
-    "quote": "node test-x402-optimizer.js"
+    "quote":            "node test-x402-optimizer.js",
+    "test:x402":        "node test-x402-optimizer.js",
+    "quickstart":       "node quickstart.mjs",
+    "optimized-txids":  "node optimized-txids.mjs",
+    "txids:quote":      "cross-env QUOTE_ONLY=true node optimized-txids.mjs",
+    "txids:save":       "cross-env SAVE_OUTPUT=true node optimized-txids.mjs",
+    "bump":             "node bump-plan.mjs",
+    "mempool-bot":      "node mempool-bot.mjs",
+    "psbt":             "node psbt-support/psbt-builder.mjs"
   },
   "dependencies": {
-    "@x402/evm": "^2.17.0",
+    "@x402/evm":   "^2.17.0",
     "@x402/fetch": "^2.17.0",
-    "dotenv": "^17.2.3",
-    "viem": "^2.38.0"
+    "bitcoinjs-lib": "^6.1.7",
+    "cross-env":   "^7.0.3",
+    "dotenv":      "^17.2.3",
+    "tiny-secp256k1": "^2.2.3",
+    "viem":        "^2.38.0",
+    "ws":          "^8.18.0"
   }
 }
