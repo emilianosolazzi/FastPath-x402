@@ -26,8 +26,11 @@
     "node": ">=20"
   },
   "scripts": {
+    "start":            "node server.js",
+    "ui":               "node server.js",
     "quote":            "node test-x402-optimizer.js",
     "test:x402":        "node test-x402-optimizer.js",
+    "test:miner":       "node test-miner-optimizer.mjs",
     "quickstart":       "node quickstart.mjs",
     "optimized-txids":  "node optimized-txids.mjs",
     "txids:quote":      "cross-env QUOTE_ONLY=true node optimized-txids.mjs",
@@ -42,6 +45,7 @@
     "bitcoinjs-lib": "^6.1.7",
     "cross-env":   "^7.0.3",
     "dotenv":      "^17.2.3",
+    "express":     "^4.19.2",
     "tiny-secp256k1": "^2.2.3",
     "viem":        "^2.38.0",
     "ws":          "^8.18.0"
