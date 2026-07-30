@@ -11,3 +11,10 @@ node optimized-txids.mjs
 $env:EVM_PRIVATE_KEY = "0xYOUR_KEY"
 $env:SAVE_OUTPUT = "true"
 node optimized-txids.mjs
+
+# PowerShell — Run miner template verification suite
+$env:EVM_PRIVATE_KEY="0xYOUR_BOT_KEY"
+node test-miner-optimizer.mjs
+
+# Bash — Run miner template verification suite
+EVM_PRIVATE_KEY=0xYOUR_BOT_KEY node test-miner-optimizer.mjs
