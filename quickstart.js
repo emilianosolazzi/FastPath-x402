@@ -90,9 +90,12 @@ async function findVerifiedTxid() {
 
   if (!txids || txids.length === 0) return null;
 
-  for (let attempt = 1; attempt <= 8; attempt++) {
-    const candidate = txids[Math.floor(Math.random() * txids.length)];
-    process.stdout.write(`Verifying candidate ${attempt} (free)... `);
+  // Pick up to 8 unique random candidates without replacement
+  const candidates = txids.sort(() => Math.random() - 0.5).slice(0, 8);
+
+  for (let i = 0; i < candidates.length; i++) {
+    const candidate = candidates[i];
+    process.stdout.write(`Verifying candidate ${i + 1} (free)... `);
     if (await verifyTx(candidate)) {
       console.log("verified ✓");
       return candidate;
