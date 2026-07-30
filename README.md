@@ -13,7 +13,9 @@ Live API: [api.nativebtc.org/x402](https://api.nativebtc.org/x402)
 | `bump-plan.mjs` | Get an RBF/CPFP bump plan for any stuck transaction | $0.01 |
 | `mempool-bot.mjs` | Autonomous mempool monitor — streams live txs, flags stuck ones, fetches bump plans | $0.005 + $0.01/stuck tx |
 | `test-x402-optimizer.js` | Full demo: quote check, fee ladder, tx insight | $0.01 |
+| `test-miner-optimizer.mjs` | Miner verification pipeline for Stratum V2 JD templates | $0.05 |
 | `x402-optimizer-middleware.js` | Reusable x402 client factory used by all scripts | — |
+| `server.js` | Web dashboard to execute x402 requests locally | — |
 | `psbt-support/psbt-builder.mjs` | Build an unsigned PSBT from a bump plan for wallet signing | $0.01 |
 | `psbt-support/psbt_builder.py` | Same flow in Python | $0.01 |
 
@@ -42,7 +44,7 @@ EVM_PRIVATE_KEY=0xYOUR_PRIVATE_KEY node quickstart.mjs
 
 Expected output:
 
-```
+```text
 Analyzing 6b467afb...0f55e
 Verdict:  bump_recommended
 Summary:  Effective fee rate 0.3 sat/vB is below the current 1 sat/vB target.
@@ -68,7 +70,7 @@ EVM_PRIVATE_KEY=0xYOUR_PRIVATE_KEY node optimized-txids.mjs
 
 Expected output:
 
-```
+```text
 ✅ Payment confirmed (8432ms total)
 
 Block Template
@@ -94,11 +96,19 @@ Signed Receipt
 ### Options
 
 ```powershell
-# Free quote — see price before spending
-$env:QUOTE_ONLY="true" ; node optimized-txids.mjs
+# Free quote preview — no payment
+$env:QUOTE_ONLY="true"
+$env:EVM_PRIVATE_KEY="0xYOUR_KEY"
+node optimized-txids.mjs
 
-# Save full JSON including all txids to file
-$env:SAVE_OUTPUT="true" ; node optimized-txids.mjs
+# Paid call — $0.05 USDC
+$env:EVM_PRIVATE_KEY="0xYOUR_KEY"
+node optimized-txids.mjs
+
+# Paid call + save full JSON to file
+$env:EVM_PRIVATE_KEY="0xYOUR_KEY"
+$env:SAVE_OUTPUT="true"
+node optimized-txids.mjs
 # Saves: optimized-template-{height}.json
 ```
 
@@ -111,6 +121,23 @@ $env:SAVE_OUTPUT="true" ; node optimized-txids.mjs
 | OCEAN | DATUM protocol | Live |
 
 Uplift range across benchmark cycles: **70 – 1,017 bps** over Core baseline. Varies with mempool complexity. Every cycle is Ed25519 signed and independently verifiable.
+
+---
+
+## Miner Verification Suite
+
+Simulates a Stratum V2 Job Declaration pool or miner validating an x402 optimized block template prior to hashing. Checks Ed25519 signatures, consensus constraints (≤ 4000 txs), coinbase math, and ensures positive fee uplift before clearing the job.
+
+```powershell
+# PowerShell
+$env:EVM_PRIVATE_KEY="0xYOUR_BOT_KEY"
+node test-miner-optimizer.mjs
+```
+
+```bash
+# Bash
+EVM_PRIVATE_KEY=0xYOUR_BOT_KEY node test-miner-optimizer.mjs
+```
 
 ---
 
@@ -179,6 +206,18 @@ $env:AUTO_INSIGHT="false"       # Watch only, no paid bump plans
 
 ---
 
+## Web UI / Operator Console
+
+A lightweight Express web dashboard to execute x402 requests visually without passing private keys through CLI environment variables. **For local testing only.**
+
+```bash
+npm run ui
+```
+
+Open `http://localhost:3000` in your browser. Paste your bot wallet private key into the form to securely run free quotes or paid template requests.
+
+---
+
 ## Free quote — no wallet needed
 
 See the payment challenge before spending anything.
@@ -194,8 +233,11 @@ Decodes the `Payment-Required` header — price, networks, USDC token address, p
 ## All scripts
 
 ```bash
+npm run start            # Run Web UI Console
+npm run ui               # Run Web UI Console
 npm run quote            # Free payment challenge preview
 npm run test:x402        # Full demo: fee ladder + tx insight ($0.01)
+npm run test:miner       # Miner template verification suite ($0.05)
 npm run quickstart       # Live tx analysis ($0.01)
 npm run optimized-txids  # Optimizer template for Job Declaration ($0.05)
 npm run txids:quote      # Preview optimizer price, no payment
