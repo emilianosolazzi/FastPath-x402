@@ -62,10 +62,14 @@ export async function getX402Quote({
     body: method === "GET" || method === "HEAD" ? undefined : JSON.stringify(body || {})
   });
 
+  const paymentHeader =
+    response.headers.get("payment-required") ||
+    response.headers.get("PAYMENT-REQUIRED");
+
   return {
     status: response.status,
     body: await readBody(response),
-    paymentRequired: parseJsonHeader(response.headers.get("payment-required"))
+    paymentRequired: parseJsonHeader(paymentHeader)
   };
 }
 
@@ -95,10 +99,19 @@ export function createFastPathX402Client({
     });
 
     const data = await readBody(response);
-    const payment = decodePaymentResponse(response.headers.get("payment-response"));
+
+    const paymentResponseHeader =
+      response.headers.get("payment-response") ||
+      response.headers.get("PAYMENT-RESPONSE");
+
+    const payment = decodePaymentResponse(paymentResponseHeader);
 
     if (!response.ok) {
-      const challenge = parseJsonHeader(response.headers.get("payment-required"));
+      const paymentRequiredHeader =
+        response.headers.get("payment-required") ||
+        response.headers.get("PAYMENT-REQUIRED");
+
+      const challenge = parseJsonHeader(paymentRequiredHeader);
       const message = [
         `FastPath request failed: HTTP ${response.status}`,
         typeof data === "string" ? data : JSON.stringify(data),
