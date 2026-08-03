@@ -2,7 +2,7 @@
 
 Node.js examples for paying FastPath x402 endpoints — Bitcoin fee intelligence, mempool monitoring, RBF bump plans, and Core v31 optimizer templates for Stratum V2 Job Declaration.
 
-Live API: [api.nativebtc.org/x402](https://api.nativebtc.org/x402)
+Live API: [api.nativebtc.org/x402](https://api.nativebtc.org)
 
 ## What this repo contains
 
